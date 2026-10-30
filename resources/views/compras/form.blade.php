@@ -4,11 +4,11 @@
 @section('section', 'Compras')
 @section('heading', 'Registrar compra')
 
-@php($filas = old('detalles', [['producto_id' => '', 'cantidad' => 1, 'costo_unitario' => '']]))
+@php($filas = old('detalles', [['producto_id' => '', 'cantidad' => 1]]))
 
 @section('content')
     <div class="form-card">
-        <div class="form-intro"><h2>Registrar compra</h2><p>Al guardar, el stock de cada producto aumentará con la cantidad comprada.</p></div>
+        <div class="form-intro"><h2>Registrar compra</h2><p>Elija el proveedor para ver sus productos. Al guardar, el stock de cada producto aumentará con la cantidad comprada.</p></div>
         <form method="POST" action="{{ route('compras.store') }}">
             @csrf
             <div class="form-grid">
@@ -20,14 +20,9 @@
             <div class="item-rows" id="detalles">
                 @foreach ($filas as $i => $fila)
                     <div class="item-row item-row-compra">
-                        <select name="detalles[{{ $i }}][producto_id]" aria-label="Producto">
-                            <option value="">Selecciona un producto</option>
-                            @foreach ($productos as $producto)
-                                <option value="{{ $producto->id }}" @selected((string) ($fila['producto_id'] ?? '') === (string) $producto->id)>{{ $producto->codigo }} · {{ $producto->nombre }}</option>
-                            @endforeach
-                        </select>
+                        <select name="detalles[{{ $i }}][producto_id]" aria-label="Producto" data-seleccionado="{{ $fila['producto_id'] ?? '' }}"></select>
                         <input name="detalles[{{ $i }}][cantidad]" type="number" min="1" value="{{ $fila['cantidad'] ?? 1 }}" aria-label="Cantidad" placeholder="Cantidad">
-                        <input name="detalles[{{ $i }}][costo_unitario]" type="number" min="0" step="0.01" value="{{ $fila['costo_unitario'] ?? '' }}" aria-label="Costo unitario (Bs)" placeholder="Costo unit. (Bs)">
+                        <span class="item-precio">—</span>
                         <button class="icon-button danger" type="button" data-quitar>Quitar</button>
                     </div>
                 @endforeach
@@ -36,6 +31,7 @@
             @foreach ($errors->get('detalles.*') as $mensajes)
                 <small class="field-error">{{ $mensajes[0] }}</small>
             @endforeach
+            <small class="field-help" id="aviso-productos"></small>
             <p><button class="button button-secondary" type="button" id="agregar-detalle">＋ Agregar producto</button> <strong style="margin-left:12px">Total: Bs <span id="total">0.00</span></strong></p>
 
             <div class="form-actions"><a class="button button-secondary" href="{{ route('compras.index') }}">Cancelar</a><button class="button button-primary" type="submit">Registrar compra</button></div>
@@ -46,27 +42,63 @@
 @push('scripts')
 <script>
 (() => {
+    const productos = @json($productos);
+    const proveedor = document.getElementById('proveedor_id');
     const contenedor = document.getElementById('detalles');
     const total = document.getElementById('total');
+    const aviso = document.getElementById('aviso-productos');
     let indice = contenedor.children.length;
 
-    function calcularTotal() {
+    const delProveedor = () => productos.filter((p) => String(p.proveedor_id) === proveedor.value);
+    const buscar = (id) => productos.find((p) => String(p.id) === String(id));
+
+    // Llena el selector de una fila solo con los productos del proveedor elegido.
+    function llenarSelector(select, seleccionado) {
+        const lista = delProveedor();
+        select.replaceChildren(new Option(proveedor.value ? 'Selecciona un producto' : 'Primero elige un proveedor', ''));
+        lista.forEach((p) => select.add(new Option(`${p.codigo} · ${p.nombre}`, p.id)));
+        select.value = lista.some((p) => String(p.id) === String(seleccionado)) ? seleccionado : '';
+        select.disabled = !proveedor.value;
+    }
+
+    function calcular() {
         let suma = 0;
         contenedor.querySelectorAll('.item-row').forEach((fila) => {
-            const [cantidad, costo] = fila.querySelectorAll('input');
-            if (fila.querySelector('select').value) suma += (Number(cantidad.value) || 0) * (Number(costo.value) || 0);
+            const producto = buscar(fila.querySelector('select').value);
+            const cantidad = Number(fila.querySelector('input').value) || 0;
+            const precio = fila.querySelector('.item-precio');
+            if (producto) {
+                const unitario = Number(producto.precio);
+                const subtotal = unitario * cantidad;
+                precio.textContent = `Bs ${unitario.toFixed(2)} c/u · Bs ${subtotal.toFixed(2)}`;
+                suma += subtotal;
+            } else {
+                precio.textContent = '—';
+            }
         });
         total.textContent = suma.toFixed(2);
     }
+
+    function actualizarProveedor() {
+        contenedor.querySelectorAll('select').forEach((select) => llenarSelector(select, select.value || select.dataset.seleccionado));
+        aviso.textContent = proveedor.value && delProveedor().length === 0
+            ? 'Este proveedor aún no tiene productos registrados.'
+            : '';
+        calcular();
+    }
+
+    proveedor.addEventListener('change', actualizarProveedor);
 
     document.getElementById('agregar-detalle').addEventListener('click', () => {
         const fila = contenedor.firstElementChild.cloneNode(true);
         fila.querySelectorAll('select, input').forEach((campo) => {
             campo.name = campo.name.replace(/\[\d+\]/, `[${indice}]`);
-            campo.value = campo.name.endsWith('[cantidad]') ? 1 : '';
         });
+        fila.querySelector('input').value = 1;
+        llenarSelector(fila.querySelector('select'), '');
         contenedor.appendChild(fila);
         indice++;
+        calcular();
     });
 
     contenedor.addEventListener('click', (evento) => {
@@ -74,12 +106,12 @@
         const fila = evento.target.closest('.item-row');
         if (contenedor.children.length > 1) fila.remove();
         else fila.querySelector('select').value = '';
-        calcularTotal();
+        calcular();
     });
 
-    contenedor.addEventListener('input', calcularTotal);
-    contenedor.addEventListener('change', calcularTotal);
-    calcularTotal();
+    contenedor.addEventListener('input', calcular);
+    contenedor.addEventListener('change', calcular);
+    actualizarProveedor();
 })();
 </script>
 @endpush

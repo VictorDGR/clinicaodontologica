@@ -167,7 +167,8 @@ class FichaController extends Controller
     {
         return Ficha::query()
             ->whereDate('fecha', $fecha)
-            ->whereTime('hora', $hora)
+            // HH:MM → HH:MM:SS para comparar igual en MySQL, PostgreSQL y SQLite.
+            ->whereTime('hora', strlen($hora) === 5 ? "{$hora}:00" : $hora)
             ->where('estado', '!=', 'Cancelada')
             ->whereKeyNot($ignorarId);
     }

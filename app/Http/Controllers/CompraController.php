@@ -7,6 +7,7 @@ use App\Models\Producto;
 use App\Models\Proveedor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CompraController extends Controller
@@ -22,7 +23,7 @@ class CompraController extends Controller
     {
         return view('compras.form', [
             'proveedores' => Proveedor::orderBy('nombre')->get(),
-            'productos' => Producto::orderBy('nombre')->get(),
+            'productos' => Producto::orderBy('nombre')->get(['id', 'codigo', 'nombre', 'precio', 'proveedor_id']),
         ]);
     }
 
@@ -38,20 +39,29 @@ class CompraController extends Controller
             'proveedor_id' => ['required', 'integer', 'exists:proveedores,id'],
             'fecha' => ['required', 'date', 'before_or_equal:today'],
             'detalles' => ['required', 'array', 'min:1'],
-            'detalles.*.producto_id' => ['required', 'integer', 'exists:productos,id'],
+            // Solo productos del proveedor elegido.
+            'detalles.*.producto_id' => ['required', 'integer', Rule::exists('productos', 'id')->where('proveedor_id', (int) $request->input('proveedor_id'))],
             'detalles.*.cantidad' => ['required', 'integer', 'min:1'],
-            'detalles.*.costo_unitario' => ['required', 'numeric', 'min:0'],
         ], [
             'required' => 'Este campo es obligatorio.',
             'detalles.required' => 'Agrega al menos un producto a la compra.',
+            'detalles.*.producto_id.exists' => 'El producto no pertenece al proveedor seleccionado.',
             'detalles.*.cantidad.min' => 'La cantidad debe ser al menos 1.',
             'fecha.before_or_equal' => 'La fecha de compra no puede ser futura.',
         ]);
 
+        // El costo unitario es el precio registrado del producto.
+        $precios = Producto::whereIn('id', array_column($datos['detalles'], 'producto_id'))->pluck('precio', 'id');
+        $detalles = array_map(fn (array $detalle): array => [
+            'producto_id' => (int) $detalle['producto_id'],
+            'cantidad' => (int) $detalle['cantidad'],
+            'costo_unitario' => (float) $precios[$detalle['producto_id']],
+        ], $datos['detalles']);
+
         $compra = Compra::registrar(
             (int) $datos['proveedor_id'],
             $datos['fecha'],
-            $datos['detalles'],
+            $detalles,
             $request->user()->secretaria?->id,
         );
 
