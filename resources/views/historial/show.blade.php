@@ -16,29 +16,37 @@
             </dl>
         </div>
 
-        <div class="panel table-panel">
-            <div class="toolbar"><div class="panel-heading" style="margin:0"><h2>Atenciones</h2><p>Revisiones registradas, de la más reciente a la más antigua.</p></div></div>
-            <div class="table-scroll">
-                <table>
-                    <thead><tr><th>Fecha</th><th>Doctor</th><th>Diente</th><th>Diagnóstico</th><th>Procedimiento</th><th>Observaciones</th><th>Materiales</th><th>Radiografía</th></tr></thead>
-                    <tbody>
-                    @forelse ($registros as $registro)
-                        @php($atencion = $registro->atencion)
-                        <tr>
-                            <td>{{ $registro->fecha->format('d/m/Y H:i') }}</td>
-                            <td>{{ $atencion->doctor->nombre_completo }}</td>
-                            <td>{{ $atencion->tipo_diente }}</td>
-                            <td style="white-space:normal">{{ $atencion->diagnostico }}</td>
-                            <td style="white-space:normal">{{ $atencion->procedimiento }}</td>
-                            <td style="white-space:normal">{{ $atencion->observaciones ?: '—' }}</td>
-                            <td style="white-space:normal">{{ $atencion->materiales->map(fn ($m) => $m->producto->nombre.' ×'.$m->cantidad)->join(', ') ?: '—' }}</td>
-                            <td>@if ($atencion->ruta_analisis_radiografico)<a class="icon-button" href="{{ route('atenciones.radiografia', $atencion) }}" target="_blank">Ver</a>@else — @endif</td>
-                        </tr>
-                    @empty
-                        <tr><td class="empty-state" colspan="8">El paciente aún no tiene atenciones registradas.</td></tr>
-                    @endforelse
-                    </tbody>
-                </table>
+        <div>
+            <div class="panel-heading"><h2 class="section-title" style="margin:0 0 4px">Atenciones</h2><p class="atencion-meta">Revisiones registradas, de la más reciente a la más antigua.</p></div>
+            <div class="atencion-grid">
+                @forelse ($registros as $registro)
+                    @php($atencion = $registro->atencion)
+                    <article class="atencion-card">
+                        <header>
+                            <span class="stat-icon">🦷</span>
+                            <div>
+                                <strong>{{ $registro->fecha->format('d/m/Y') }}</strong>
+                                <span class="atencion-meta">{{ $registro->fecha->format('H:i') }} · {{ $atencion->doctor->nombre_completo }}</span>
+                            </div>
+                        </header>
+                        <dl>
+                            <div><dt>Diente</dt><dd>{{ $atencion->tipo_diente }}</dd></div>
+                            <div><dt>Diagnóstico</dt><dd>{{ $atencion->diagnostico }}</dd></div>
+                            <div><dt>Procedimiento</dt><dd>{{ $atencion->procedimiento }}</dd></div>
+                            <div><dt>Observaciones</dt><dd>{{ $atencion->observaciones ?: '—' }}</dd></div>
+                            <div><dt>Materiales</dt><dd>{{ $atencion->materiales->map(fn ($m) => $m->producto->nombre.' ×'.$m->cantidad)->join(', ') ?: '—' }}</dd></div>
+                        </dl>
+                        <footer>
+                            @if ($atencion->ruta_analisis_radiografico)
+                                <a class="button button-secondary" href="{{ route('atenciones.radiografia', $atencion) }}" target="_blank">Ver radiografía</a>
+                            @else
+                                <span class="atencion-meta">Sin radiografía</span>
+                            @endif
+                        </footer>
+                    </article>
+                @empty
+                    <div class="panel empty-state">El paciente aún no tiene atenciones registradas.</div>
+                @endforelse
             </div>
         </div>
 
