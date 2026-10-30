@@ -138,16 +138,17 @@ th:first-child, td:first-child { padding-left: 20px; }
 .login-card .brand small { color: var(--muted); }
 .login-card .form-grid { grid-template-columns: 1fr; }
 .login-card .button { width: 100%; margin-top: 22px; }
-.atencion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.atencion-card { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: var(--shadow); }
-.atencion-card header { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.atencion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.atencion-card { display: flex; flex-direction: column; gap: 18px; padding: 22px 24px; border: 1px solid var(--line); border-radius: 13px; background: white; box-shadow: var(--shadow); }
+.atencion-card header { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .atencion-card header .stat-icon { grid-row: auto; flex: none; }
-.atencion-card header strong { display: block; color: var(--ink); font-size: 15px; font-weight: 650; }
+.atencion-titulo { min-width: 0; }
+.atencion-titulo strong { display: block; margin-bottom: 3px; color: var(--ink); font-size: 15px; font-weight: 650; }
+.atencion-diente { flex: none; margin-left: auto; padding: 5px 11px; border-radius: 20px; background: #e2f6f5; color: var(--teal-dark); font-size: 11px; font-weight: 600; }
 .atencion-meta { margin: 0; color: var(--muted); font-size: 11px; }
-.atencion-card dl { display: grid; gap: 10px; margin: 0; }
-.atencion-card dt { margin-bottom: 3px; color: var(--muted); font-size: 10px; font-weight: 650; text-transform: uppercase; }
-.atencion-card dd { margin: 0; color: var(--ink); font-size: 13px; overflow-wrap: anywhere; }
-.atencion-card footer { margin-top: auto; }
+.atencion-card .detail-grid { gap: 12px; }
+.atencion-card .detail-grid dd { line-height: 1.45; overflow-wrap: anywhere; }
+.atencion-card footer { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 
 @media (max-width: 900px) {
@@ -177,6 +178,8 @@ th:first-child, td:first-child { padding-left: 20px; }
     .form-grid { grid-template-columns: 1fr; gap: 16px; }
     .field-wide { grid-column: auto; }
     .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+    .atencion-card { padding: 18px 16px; }
+    .atencion-card .detail-grid { grid-template-columns: 1fr; }
     .welcome-card { align-items: flex-start; flex-direction: column; padding: 21px; }
     .welcome-card h2 { font-size: 19px; }
     .doctor-item { flex-wrap: wrap; }

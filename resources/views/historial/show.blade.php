@@ -24,21 +24,21 @@
                     <article class="atencion-card">
                         <header>
                             <span class="stat-icon">🦷</span>
-                            <div>
+                            <div class="atencion-titulo">
                                 <strong>{{ $registro->fecha->format('d/m/Y') }}</strong>
                                 <span class="atencion-meta">{{ $registro->fecha->format('H:i') }} · {{ $atencion->doctor->nombre_completo }}</span>
                             </div>
+                            <span class="atencion-diente">{{ $atencion->tipo_diente }}</span>
                         </header>
-                        <dl>
-                            <div><dt>Diente</dt><dd>{{ $atencion->tipo_diente }}</dd></div>
+                        <dl class="detail-grid">
                             <div><dt>Diagnóstico</dt><dd>{{ $atencion->diagnostico }}</dd></div>
                             <div><dt>Procedimiento</dt><dd>{{ $atencion->procedimiento }}</dd></div>
                             <div><dt>Observaciones</dt><dd>{{ $atencion->observaciones ?: '—' }}</dd></div>
-                            <div><dt>Materiales</dt><dd>{{ $atencion->materiales->map(fn ($m) => $m->producto->nombre.' ×'.$m->cantidad)->join(', ') ?: '—' }}</dd></div>
+                            <div><dt>Materiales usados</dt><dd>{{ $atencion->materiales->map(fn ($m) => $m->producto->nombre.' ×'.$m->cantidad)->join(', ') ?: '—' }}</dd></div>
                         </dl>
                         <footer>
                             @if ($atencion->ruta_analisis_radiografico)
-                                <a class="button button-secondary" href="{{ route('atenciones.radiografia', $atencion) }}" target="_blank">Ver radiografía</a>
+                                <a class="icon-button" href="{{ route('atenciones.radiografia', $atencion) }}" target="_blank">Ver radiografía</a>
                             @else
                                 <span class="atencion-meta">Sin radiografía</span>
                             @endif
